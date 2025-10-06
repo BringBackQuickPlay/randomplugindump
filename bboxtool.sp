@@ -1,5 +1,5 @@
 /**
- * TF2 Server-Side Bounding Box Drawer (Temp Entities) — ghosting-fixed
+ * TF2 Server-Side Bounding Box Drawer (Temp Entities)
  * Commands:
  *   sm_bboxme [me|all]
  *   sm_bboxentity [me|all]
@@ -7,8 +7,8 @@
  *   sm_bboxclear_all (admin)
  *
  * Cvars:
- *   sm_bbox_interval "0.11"  // seconds between redraws (>=0.10)
- *   sm_bbox_life     "0.10"  // beam lifetime seconds (>=0.10)
+ *   sm_bbox_interval "0.051"  // seconds between redraws
+ *   sm_bbox_life     "0.051"  // beam lifetime seconds
  *   sm_bbox_autoclear_on_round "1"
  */
 
@@ -48,22 +48,22 @@ ConVar g_cvLifeSec;            // TE beam life in seconds (>=0.10)
 public Plugin myinfo =
 {
     name = PLUGIN_NAME,
-    author = "ChatGPT",
-    description = "Draws server-side temp-entity bounding boxes; ghosting-safe lifetimes.",
+    author = "ChatGPT (lmfao)",
+    description = "Draws server-side temp-entity bounding boxes",
     version = PLUGIN_VERSION,
     url = ""
 };
 
 public void OnPluginStart()
 {
-    RegConsoleCmd("sm_bboxme",        Cmd_BBoxMe,        "Toggle bbox for your player + your projectiles. Usage: sm_bboxme [me|all]");
-    RegConsoleCmd("sm_bboxentity",    Cmd_BBoxEntity,    "Toggle bbox on entity under crosshair. Usage: sm_bboxentity [me|all]");
+    RegConsoleCmd("sm_bboxme",        Cmd_BBoxMe,        "Toggle bbox for your player + your projectiles. Usage: sm_bboxme [me|all] if you use all, everyone on the server will see them.");
+    RegConsoleCmd("sm_bboxentity",    Cmd_BBoxEntity,    "Toggle bbox on entity under crosshair. Usage: sm_bboxentity [me|all] if you use all, everyone on the server will see them.");
     RegConsoleCmd("sm_bboxclear",     Cmd_BBoxClear,     "Clear all bbox timers/refs for you and turn bboxme off.");
     RegAdminCmd( "sm_bboxclear_all",  Cmd_BBoxClearAll,  ADMFLAG_GENERIC, "ADMIN: Clear all bbox timers/refs for everyone and turn bboxme off.");
 
     g_cvAutoClearOnRound = CreateConVar("sm_bbox_autoclear_on_round", "1",   "Auto-clear all overlays on round start.", FCVAR_NOTIFY, true, 0.0, true, 1.0);
-    g_cvInterval         = CreateConVar("sm_bbox_interval",           "0.051","Seconds between redraws (>=0.10).",       FCVAR_NOTIFY, true, 0.10, true, 0.50);
-    g_cvLifeSec          = CreateConVar("sm_bbox_life",               "0.051","Beam lifetime in seconds (>=0.10).",      FCVAR_NOTIFY, true, 0.10, true, 0.50);
+    g_cvInterval         = CreateConVar("sm_bbox_interval",           "0.051","Seconds between redraws.",       FCVAR_NOTIFY, true, 0.10, true, 0.50);
+    g_cvLifeSec          = CreateConVar("sm_bbox_life",               "0.051","Beam lifetime in seconds.",      FCVAR_NOTIFY, true, 0.10, true, 0.50);
 
     HookEvent("teamplay_round_start", Event_RoundStart, EventHookMode_PostNoCopy);
     HookEvent("arena_round_start",    Event_RoundStart, EventHookMode_PostNoCopy);
@@ -374,7 +374,7 @@ float GetDrawInterval() { return g_cvInterval.FloatValue; }
 float GetBeamLife()
 {
     float s = g_cvLifeSec.FloatValue;
-    if (s < 0.015) s = 0.015; // critical: <0.10 can quantize to 0 (=never die)
+    if (s < 0.051) s = 0.051; // Must be a minimum of 0.050 or the temp entities become permanent.
     return s;
 }
 
