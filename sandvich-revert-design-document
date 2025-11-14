@@ -1,0 +1,23 @@
+The scope of the revert is quite large, so need to organize my thoughts.
+
+The goal with the sandvich revert is to revert it to a point where the following are true:
+
+1. Sandvich can be thrown to gain health again.
+2. Touching healthkits should give you a new sandvich (and delete any thrown sandviches that belong to the heavy who touched healthkit).
+3. Touching resupply locker should give you a new sandvich (and delete any thrown sandviches that belong to the heavy who touched healthkit).
+
+It's uneccesary to handle player death and spawn since the game does that for us.
+
+Obligatory hooks:
+CHealthKit so we can run code to give sandvich back.
+Maybe hooks:
+CTFLunchBox::SecondaryAttack
+
+How can we track Sandvich?
+
+in the entities enum
+we have a single bool
+called 
+is_sandvich
+
+
