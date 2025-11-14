@@ -14,10 +14,17 @@ Maybe hooks:
 CTFLunchBox::SecondaryAttack
 
 How can we track Sandvich?
+is_sandvich in Entity enum
+```entities[entity].is_sandvich```
+bool used to check if a entity is a sandvich.
 
-in the entities enum
-we have a single bool
-called 
-is_sandvich
+sandvich_owner_client in Entity Enum
+```entities[entity].sandvich_owner_client```
+int that entity has that corresponds to the index of it's owner.
 
-
+previous_sandvich_ent in Players Enum
+current_sandvich_ent in Players Enum
+```players[client].previous_sandvich_ent```
+Index of the previous sandvich (previous does not mean it's gone!).
+```players[client].current_sandvich_ent```
+Index of the current sandvich.
