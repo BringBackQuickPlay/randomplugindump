@@ -1,7 +1,7 @@
 (REMEMBER: Variable names and code in decompiled code may differ from examples when TF2 updates or due to how a ghidra version might handle things when decompiling!)
 
 In order to hopefully allow cloaking while taunting (or being struck by a player if wearing the deadringer)
-we need to make patch 2 functions.
+we need to memorypatch 2 functions.
 
 Finding CTFPlayer::DoClassSpecialSkill
 
@@ -9,10 +9,8 @@ Finding CTFPlayer::DoClassSpecialSkill
 2. It will be the FUN_ that does not take forever to decompile, alternatively, amount of code lines in decompiler should be between 60-80 lines
 and there should be a call somewhere to TryToPickupBuilding inside of a if with something like iVar4 == 9
 
-To allow fencing cloak stuff, we need to ensure
-bVar3 = FUN_105205e0(param_1 + 0x1ae8,7);
-
-and for this if:
+Windows:
+Look at this if code:
 
 if ((!bVar3) && (*(float *)(param_1 + 0x1da8) <= *(float *)(DAT_10a2d8a8 + 0xc)))
 
