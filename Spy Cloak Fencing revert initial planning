@@ -183,7 +183,7 @@ LAB_10500a88:
   }
 
 Just nop this: !bVar2
-It should be a JNZ, straight up just NOP it and that if statement will never run.
+It should be a JNZ, straight up just NOP it and the code will act as if that if check never existed.
 
 Signatures for Linux:
 
