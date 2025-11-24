@@ -1,0 +1,207 @@
+(REMEMBER: Variable names and code in decompiled code may differ from examples when TF2 updates or due to how a ghidra version might handle things when decompiling!)
+
+In order to hopefully allow cloaking while taunting (or being struck by a player if wearing the deadringer)
+we need to make patch 2 functions.
+
+Finding CTFPlayer::DoClassSpecialSkill
+
+1. Search for the string cannot_pick_up_buildings so you find CTFPlayer::TryToPickupBuilding
+2. It will be the FUN_ that does not take forever to decompile, alternatively, amount of code lines in decompiler should be between 60-80 lines
+and there should be a call somewhere to TryToPickupBuilding inside of a if with something like iVar4 == 9
+
+To allow fencing cloak stuff, we need to ensure
+bVar3 = FUN_105205e0(param_1 + 0x1ae8,7);
+
+and for this if:
+
+if ((!bVar3) && (*(float *)(param_1 + 0x1da8) <= *(float *)(DAT_10a2d8a8 + 0xc)))
+
+We need to get rid of the !bVar3 stuff on Windows.
+
+Code shown for context:
+
+  else if (iVar4 == 8) {
+    bVar3 = FUN_105205e0(param_1 + 0x1ae8,7);
+    if ((!bVar3) && (*(float *)(param_1 + 0x1da8) <= *(float *)(DAT_10a2d8a8 + 0xc))) {
+      piVar5 = CTFPlayer::Weapon_OwnsThisID(param_1,0x39);
+      if (piVar5 != (int *)0x0) {
+        (**(code **)(*piVar5 + 0x76c))();
+        return 0;
+      }
+    }
+  }
+
+
+For linux (code shown for context):
+
+    if (iVar3 == 8) {
+      uVar4 = CTFPlayerShared::InCond((CTFPlayerShared *)(this + 0x1af4),7);
+                    /* Delete uVar4 == '\0' so it's no longer part of the if statement in order to
+                       allow taunt-cloaking */
+      if ((((char)uVar4 == '\0') && (*(float *)(this + 0x1db4) <= *(float *)(gpGlobals + 0xc))) &&
+         (piVar5 = (int *)Weapon_OwnsThisID(this,0x39), piVar5 != (int *)0x0)) {
+        (**(code **)(*piVar5 + 0x788))(piVar5);
+        return uVar4;
+      }
+    }
+
+
+We need to get rid of the ((char)uVar4 == '\0')
+
+
+That's part 1, part 2:
+
+
+Part 2 involves a memorypatch to CTFPlayer::OnTakeDamage. We won't be touching any critical code
+that could mess up other reverts, so don't worry. (Do note that there's two listed in Ghidra.
+It's the big one we want to fiddle with).
+
+Linux:
+
+Code for context:
+
+      if (*(int *)(this + 0x22d8) == 8) {
+        if ((*(int *)(param_1 + 0x40) != 0x51) && (*(int *)(param_1 + 0x40) != 0x10)) {
+          if (this[0x1d5c] == (CTFPlayer)0x0) {
+            if ((local_4f0 & (undefined1  [16])0x20) != (undefined1  [16])0x0) goto LAB_00d0679a;
+            CTFPlayerShared::NoteLastDamageTime(this_01,*(int *)(this + 0xc58));
+          }
+          else {
+            NetworkVar_m_Shared::NetworkStateChanged((NetworkVar_m_Shared *)this_01,this + 0x1d5c);
+            this[0x1d5c] = (CTFPlayer)0x0;
+            cVar8 = CTFPlayerShared::InCond();
+            if ((cVar8 == '\0') &&
+               (SpyDeadRingerDeath(this,(CTakeDamageInfo *)&local_52c), this_02 != (CTFPlayer *)0x0)
+               ) {
+              IncrementKillCountSinceLastDeploy(this_02,(CTakeDamageInfo *)&local_52c);
+            }
+          }
+          goto LAB_00d0550a;
+        }
+LAB_00d0679a:
+        if (local_57c != (CBaseEntity *)0x0) goto LAB_00d05514;
+      }
+
+We want to remove (cVar8 == '\0') from the if statement.
+
+Windows:
+
+First search for the string lose_hype_on_take_damage
+that will likely take you to a Undefined function. 
+In the decompiler window, you should be able to Ctrl+F and search for 
+lose_hype_on_take_damage and fish_damage_override
+If it has those two strings too, this Undefined function is 
+CTFPlayer::OnTakeDamage
+
+Go to the top of the Undefined function in the decompiler window and click.
+In listing window, you should now see that the first address has a slight blue hue.
+
+You should see something like this:
+ 
+        104fe4c0 53              PUSH       EBX
+        104fe4c1 8b dc           MOV        EBX,ESP
+        104fe4c3 83 ec 08        SUB        ESP,0x8
+        104fe4c6 83 e4 f0        AND        ESP,0xfffffff0
+        104fe4c9 83 c4 04        ADD        ESP,0x4
+        104fe4cc 55              PUSH       EBP
+        104fe4cd 8b 6b 04        MOV        EBP,dword ptr [EBX + local_res0]
+        104fe4d0 89 6c 24 04     MOV        dword ptr [ESP + local_c],EBP
+        104fe4d4 8b ec           MOV        EBP,ESP
+        104fe4d6 81 ec c8        SUB        ESP,0x5c8
+                 05 00 00
+
+Rightclick the first address and choose "Create Function".
+Then rename the function to CTFPlayer::OnTakeDamage
+
+With that out of the way.
+Click somewhere in the decompile window for OnTakeDamage and press Ctrl+F.
+
+Search for this (without the ""): "this,8"
+
+It should lead you to the following code (prepare yourself it's big)
+
+  uVar7 = FUN_104f9740(this,8);
+  piVar19 = local_3c;
+  if ((((char)uVar7 != '\0') && (param_1[0x10] != 2.24208e-44)) && (param_1[0x10] != 1.13505e-43)) {
+    if ((char)*(int *)((int)this + 0x1d50) == '\0') {
+      if ((local_cc & 0x20) == 0) {
+        FUN_10521e60((int *)((int)this + 0x1ae8),*(int *)((int)this + 0xc40));
+        piVar19 = local_3c;
+      }
+    }
+    else {
+      (**(code **)(*(int *)((int)this + 0x1ae8) + 8))();
+      *(undefined1 *)((int)this + 0x1d50) = 0;
+      bVar2 = CTFPlayerShared::InCond((int *)((int)this + 0x1ae8),7);
+      piVar19 = local_3c;
+      if (!bVar2) {
+                    /* WARNING: Load size is inaccurate */
+        cVar1 = (**(code **)(*this + 0x10c))();
+        if (((cVar1 != '\0') && ((int *)this != (int *)0xffffdd34)) &&
+           ((*(int *)((int)this + 0x22d0) == 8 &&
+            ((bVar2 = CTFPlayerShared::InCond((int *)((int)this + 0x1ae8),4), !bVar2 &&
+             (bVar2 = FUN_10518170(this,'\x01'), bVar2)))))) {
+          fVar21 = *(float *)((int)this + 0x1d5c);
+          if (100.0 <= fVar21) {
+            local_18 = fVar21;
+            if (fVar21 != 50.0) {
+              (**(code **)(*(int *)((int)this + 0x1ae8) + 8))();
+              *(int *)((int)this + 0x1d5c) = 0x42480000;
+            }
+            *(undefined1 *)((int)this + 0x2428) = 1;
+            FUN_104edea0(this,(float *)&local_108,'\x01');
+            FUN_105168b0((int *)((int)this + 0x1ae8),(int *)0xd,*(float *)(DAT_10b8131c + 0x2c),
+                         (int *)0x0);
+            *(undefined1 *)((int)this + 0x2428) = 0;
+          }
+        }
+        piVar19 = local_3c;
+        if (local_3c != (int *)0x0) {
+          if (local_dc == 0) {
+LAB_10500a88:
+            piVar6 = (int *)0x0;
+          }
+          else {
+            uVar17 = 0x1fff;
+            if (local_dc != 0xffffffff) {
+              uVar17 = local_dc & 0xffff;
+            }
+            puVar16 = (undefined4 *)(PTR_null_10980d18 + uVar17 * 0x10 + 4);
+            if ((puVar16 == (undefined4 *)0x0) || (puVar16[1] != local_dc >> 0x10))
+            goto LAB_10500a88;
+            piVar6 = (int *)*puVar16;
+          }
+          local_18 = (float)___RTDynamicCast(piVar6,0,(TypeDescriptor *)&PTR_PTR_FUN_109d77cc,
+                                             (TypeDescriptor *)&PTR_PTR_FUN_109eab70,0);
+          if (((local_18 != 0.0) &&
+              (fVar21 = (float)thunk_FUN_101d8eb0((int)piVar19), local_18 == fVar21)) &&
+             (local_18 = (float)(piVar19[0x7d5] + 1), (float)piVar19[0x7d5] != local_18)) {
+            (**(code **)(piVar19[0x6ba] + 8))();
+            piVar19[0x7d5] = (int)local_18;
+          }
+        }
+      }
+    }
+  }
+
+Just nop this: !bVar2
+It should be a JNZ, straight up just NOP it and that if statement will never run.
+
+Signatures for Linux:
+
+CTFPlayer::DoClassSpecialSkill
+_ZN9CTFPlayer19DoClassSpecialSkillEv
+
+CTFPlayer::OnTakeDamage
+_ZN9CTFPlayer12OnTakeDamageERK15CTakeDamageInfo
+
+Signatures for Windows:
+
+CTFPlayer::DoClassSpecialSkill
+Ghidra:   56 8B F1 8B 06 8B 80 ? ? ? ? FF D0 84 C0 0F 84 ? ? ? ? F7 86 ? ? ? ? 00 00 04 00
+Gamedata: \x56\x8B\xF1\x8B\x06\x8B\x80\x2A\x2A\x2A\x2A\xFF\xD0\x84\xC0\x0F\x84\x2A\x2A\x2A\x2A\xF7\x86\x2A\x2A\x2A\x2A\x00\x00\x04\x00
+
+
+CTFPlayer::OnTakeDamage
+Ghidra:   53 8B DC 83 EC 08 83 E4 F0 83 C4 04 55 8B 6B ? 89 6C 24 ? 8B EC 81 EC C8 05 00 00
+Gamedata: \x53\x8B\xDC\x83\xEC\x08\x83\xE4\xF0\x83\xC4\x04\x55\x8B\x6B\x2A\x89\x6C\x24\x2A\x8B\xEC\x81\xEC\xC8\x05\x00\x00
