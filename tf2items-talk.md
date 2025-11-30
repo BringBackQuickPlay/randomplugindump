@@ -2,7 +2,7 @@
 https://github.com/BringBackQuickPlay/castaway-plugins/tree/extensions/tf2items-bforce-in-forwards
 https://github.com/BringBackQuickPlay/SMExt-TF2Items/tree/add-bforce-to-ongivenameditem-forward
 
-Need to compile for Windows too, and I need to test it all.
+Need to compile extension for Windows too, and I need to test it all.
 Basically adds a extensions folder to the castaway project which will contain a pre-compiled changed version (Windows & Linux)
 of nosoops TF2Items fork.
 Updates the include too.
