@@ -1,3 +1,9 @@
+Random info:
+
+Jan 16, 2017 is the commit that is the final Limetech update CommitNumber 279 
+
+
+
 Instructions on compiling old TF2Items (Asherkin Repo).
 
 
@@ -7,5 +13,5 @@ self.possibleSdks['ep2v'] =  {'sdk': 'HL2SDKOBVALVE',       'ext': '2.ep2v',  'd
 That is the sdk we need to target.
 
 
-Metamod Source version 
+Metamod Source version to target: 1.8
 [UNDER CONSTRUCTION]
